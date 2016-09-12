@@ -1,0 +1,27 @@
+{
+  "name": "pack-npm-module",
+  "version": "0.0.1",
+  "description": "Lib for packing one file from npm-package",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arvitaly/pack-npm-module.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/arvitaly/pack-npm-module/issues"
+  },
+  "homepage": "https://github.com/arvitaly/pack-npm-module#readme",
+  "devDependencies": {
+    "coveralls": "^2.11.12",
+    "fixture2": "0.0.3",
+    "istanbul": "^0.4.5",
+    "jasmine": "^2.4.1",
+    "mock2": "0.0.11"
+  }
+}
