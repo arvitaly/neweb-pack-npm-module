@@ -1,20 +1,21 @@
 var fs = require('fs');
+var path = require('path');
 var async = require('async');
 var patch = require('module-require-patch');
 var getPackageInfo = require('./package-info');
 var writeModule = require('./write-module');
 var genName = require('./gen-name');
 function pack(isMain, filename, config, cache, callback) {
-    console.log("pack", filename);
     if (isMain) {
         if (cache.main[filename]) {
             cache.main[filename].listeners.push(callback.bind(undefined, null));
             return;
         }
+
         var info = getPackageInfo(filename, config.dest);
         if (info.dest.stat) {
-            //callback(null, info.dest.info.dependencies);
-            ///return;
+            callback(null, { info: { package: info.dest.info.package, request: info.dest.info.request }, externals: info.dest.info.dependencies, internals: [] });
+            return;
         }
         cache.main[filename] = {
             listeners: []
@@ -27,8 +28,8 @@ function pack(isMain, filename, config, cache, callback) {
         cache.internal[filename] = true;
     }
     var res = patch("" + fs.readFileSync(filename), filename);
-
-
+    //Filter for system or other not existing modules
+    res.deps = res.deps.filter((dep) => !!dep.file);
     //Parallel proc internal dependencies and extern package
     async.parallel({
         externalsFiles: (cb) => async.parallel(res.deps.filter((dep) => dep.package).map((dep) => {
@@ -51,12 +52,10 @@ function pack(isMain, filename, config, cache, callback) {
                 internals.push(i);
             })
         })
-        console.log(internals);
         var externals = results.externalsFiles.map((f) => { return genName(f.info) });
         externals = externals.concat([].concat.apply([], results.internalsFiles.map((internalsFile) => {
             return internalsFile.externals;
         })));
-
         //Write npm file, if called from foreign package
         if (isMain) {
             writeModule(info, res.code, internals, externals, (err) => {
@@ -76,7 +75,7 @@ function pack(isMain, filename, config, cache, callback) {
         }
     })
 }
-module.exports = (filename, config, callback) => {
+var factory = (filename, config, callback) => {
     pack(true, filename, config, {
         main: {},
         internal: {}
@@ -84,3 +83,27 @@ module.exports = (filename, config, callback) => {
         if (err) console.error(err);
     });
 }
+factory.packAll = (packagePath, config, callback) => {
+    var packageFile = path.join(packagePath, "package.json");
+    var packageInfo = require(packageFile);
+    var files = require('glob').sync("**/*.js", { cwd: packagePath });
+    var cache = {
+        main: {},
+        internal: {}
+    }
+    async.parallel(files.map((file) => {
+        file = require('path').join(packagePath, file);
+        return pack.bind(this, true, file, config, cache);
+    }), (err, results) => {
+        if (err) {
+            callback(err);
+            return;
+        }
+        var dependencies = Array.from(new Set([].concat.apply([], results.map((result) => {
+            return result.externals
+        }))));
+        fs.writeFileSync(path.join(config.dest, packageInfo.name + "@" + packageInfo.version, "neweb.json"), JSON.stringify({ name: packageInfo.name, version: packageInfo.version, dependencies: dependencies }));
+        callback();
+    })
+}
+module.exports = factory;

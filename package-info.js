@@ -4,7 +4,7 @@ module.exports = (filename, dest) => {
     var packageRoot = paths(filename).packageRoot,
         packageInfo = require(path.join(packageRoot, "package.json")),
         moduleName = path.relative(packageRoot, filename).replace(/\.js$/, "").replace(/\\/gi, "/"),
-        destPath = path.resolve(path.join(dest, packageInfo.name, packageInfo.version, moduleName)),
+        destPath = path.resolve(path.join(dest, packageInfo.name + "@" + packageInfo.version, moduleName)),
         destFile = destPath + path.extname(filename),
         destInfoFile = destPath + ".nwb.json",
         destInfoStat,

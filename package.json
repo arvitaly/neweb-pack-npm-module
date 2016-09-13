@@ -1,6 +1,6 @@
 {
   "name": "pack-npm-module",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Lib for packing one file from npm-package",
   "main": "index.js",
   "scripts": {
@@ -22,13 +22,14 @@
     "coveralls": "^2.11.12",
     "fixture2": "0.0.3",
     "istanbul": "^0.4.5",
-    "jasmine": "^2.4.1",
+    "jasmine": "2.4.1",
     "mock2": "0.0.11"
   },
   "dependencies": {
     "async": "^2.0.1",
+    "glob": "^7.0.6",
     "mkdirp": "^0.5.1",
-    "module-require-patch": "0.0.7",
-    "webpack": "^1.13.2"
+    "module-require-patch": "0.0.10",
+    "uglify-js": "^2.7.3"
   }
 }
