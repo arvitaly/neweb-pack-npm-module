@@ -1,0 +1,1 @@
+import * as ModuleRequirePatch from 'module-require-patch';
