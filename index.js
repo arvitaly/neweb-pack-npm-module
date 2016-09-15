@@ -1,5 +1,6 @@
-var fs = require('fs');
+var co = require('co');
 var write = require('./write');
+var fs = require('fs');
 var patch = require('module-require-patch');
 var getModuleInfo = require('node-module-info');
 //var getModuleInfo = require('node-module-info');
@@ -8,39 +9,25 @@ module.exports = (modulePath, config, callback) => {
 
     var dependencies = [];
 
-    packFile(modulePath, (err) => {
-        if (err) return callback(err);
+    co(packFile.bind(this, modulePath)).then(() => {
         callback(null, dependencies);
-    });
+    }).catch((err) => {
+        callback(err);
+    })
 
-    function packFile(modulePath, callback) {
+    function* packFile(modulePath) {
         var moduleInfo = getModuleInfo(modulePath).getFullInfo();
         if (dependencies.indexOf(moduleInfo.defineName) > -1) {
-            return callback();
+            return;
         }
         dependencies.push(moduleInfo.defineName);
         //Read current file
-        fs.readFile(modulePath, (err, content) => {
-            if (err) return callback(err);
-            var patchInfo = patch("" + content, modulePath);
-            write(patchInfo, config, (err) => {
-                if (err) return callback(err);
-
-                //Pack every dependence
-                if (patchInfo.dependencies.length == 0) {
-                    return callback();
-                }
-                var i = 0;
-                patchInfo.dependencies.map((d) => {
-                    packFile(d.info.resolvedPath, (err) => {
-                        if (err) return callback(err);
-                        i++;
-                        if (i == patchInfo.dependencies.length) {
-                            callback();
-                        }
-                    });
-                })
-            })
-        })
+        var content = yield fs.readFile.bind(fs, modulePath);
+        var patchInfo = patch("" + content, modulePath);
+        //Pack every dependence
+        yield Promise.all(patchInfo.dependencies.map((d) => {
+            return co(packFile.bind(this, d.info.resolvedPath));
+        }));
+        yield write(patchInfo, config);
     }
 }
