@@ -6,7 +6,7 @@ declare namespace PackNpmModule {
             version: string,
             modules: Array<{
                 code: string,
-                info: ModuleRequirePatch.Info
+                defineName: string
             }>
         }]
     }
