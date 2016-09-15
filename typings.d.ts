@@ -1,14 +1,7 @@
 import * as ModuleRequirePatch from 'module-require-patch';
 declare namespace PackNpmModule {
     interface Result {
-        packages: [{
-            name: string,
-            version: string,
-            modules: Array<{
-                code: string,
-                defineName: string
-            }>
-        }]
+        dependencies: Array<string>
     }
 }
 declare function PackNpmModule(modulePath): PackNpmModule.Result;
